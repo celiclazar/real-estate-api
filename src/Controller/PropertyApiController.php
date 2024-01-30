@@ -25,14 +25,14 @@ class PropertyApiController extends AbstractController
         $this->propertyValidator = $propertyValidator;
     }
 
-//    #[Route('api/properties', name: 'app_properties', methods: ['GET'])]
-//    public function property(): JsonResponse
-//    {
-//        $properties = $this->propertyService->getProperties();
-//        return $this->json([
-//            'properties' => $properties
-//        ]);
-//    }
+    #[Route('api/properties', name: 'app_properties', methods: ['GET'])]
+    public function property(): JsonResponse
+    {
+        $properties = $this->propertyService->getProperties();
+        return $this->json([
+            'properties' => $properties
+        ]);
+    }
 
     #[Route('api/properties/{id}', name: 'app_properties_show', methods: ['GET'])]
     public function show($id = null): JsonResponse
