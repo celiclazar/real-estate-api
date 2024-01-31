@@ -7,23 +7,25 @@ use Symfony\Component\Validator\Constraints as Assert;
 class PropertyResponseDTO
 {
     public function __construct(
-        #[Assert\NotBlank]
-        #[Assert\Type('string')]
-        public readonly string $title,
+        public int $id,
 
         #[Assert\NotBlank]
         #[Assert\Type('string')]
-        public readonly string $description,
+        public string $title,
+
+        #[Assert\NotBlank]
+        #[Assert\Type('string')]
+        public string $description,
 
         #[Assert\Type(
             type: 'integer',
             message: 'The value {{ value }} is not a valid {{ type }}.',
         )]
-        public readonly int $price,
+        public int $price,
 
         #[Assert\NotBlank]
         #[Assert\Type('string')]
-        public readonly string $location,
+        public string $location,
 
         #[Assert\Type(
             type: 'integer',

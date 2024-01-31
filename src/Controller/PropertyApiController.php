@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\DTO\PropertyCreationDTO;
+use App\DTO\CreatePropertyDTO;
 use App\Service\PropertyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,8 +14,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 
 class PropertyApiController extends AbstractController
 {
-    private $propertyService;
-    private $propertyValidator;
+    private object $propertyService;
 
     public function __construct(PropertyService $propertyService)
     {
@@ -66,7 +65,7 @@ class PropertyApiController extends AbstractController
     }
 
     #[Route('api/properties/add', name: 'app_properties', methods: ['POST'])]
-    public function create(#[MapRequestPayload] PropertyCreationDTO $propertyCreationDTO): JsonResponse
+    public function create(#[MapRequestPayload] CreatePropertyDTO $propertyCreationDTO): JsonResponse
     {
         try {
             if ($responseDTO = $this->propertyService->createProperty($propertyCreationDTO)) {
@@ -89,7 +88,7 @@ class PropertyApiController extends AbstractController
     }
 
     #[Route('api/properties/{id?}', name: 'app_properties_update', methods: ['PUT'])]
-    public function update(int $id, #[MapRequestPayload] PropertyCreationDTO $propertyCreationDTO): JsonResponse
+    public function update(int $id, #[MapRequestPayload] CreatePropertyDTO $propertyCreationDTO): JsonResponse
     {
         $this->propertyService->updateProperty($id, $propertyCreationDTO);
 

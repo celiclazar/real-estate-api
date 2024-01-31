@@ -3,7 +3,8 @@
 namespace App\Service;
 
 use App\DTO\CreatePropertyResponseDTO;
-use App\DTO\PropertyCreationDTO;
+use App\DTO\CreatePropertyDTO;
+use App\DTO\PropertyResponseDTO;
 use App\Entity\Property as PropertyEntity;
 use App\Repository\PropertyRepository;
 
@@ -16,7 +17,7 @@ class PropertyService
         $this->propertyRepository = $propertyRepository;
     }
 
-    public function createProperty(PropertyCreationDTO $propertyCreationDTO):CreatePropertyResponseDTO
+    public function createProperty(CreatePropertyDTO $propertyCreationDTO):CreatePropertyResponseDTO
     {
         try {
             $propertyEntity = $this->convertDTOToEntity($propertyCreationDTO);
@@ -31,10 +32,9 @@ class PropertyService
 
     public function getPropertyById($id)
     {
-
-        if (!empty($property = $this->entityManager->getRepository(PropertyEntity::class)->find($id)))
+        if (!empty($property = $this->propertyRepository->find($id)))
         {
-            return $property;
+            return $this->convertEntityToDTO($property);
         }
 
         return null;
@@ -42,10 +42,10 @@ class PropertyService
 
     public function getProperties()
     {
-        return $this->entityManager->getRepository(PropertyEntity::class)->findAll();
+        return $this->propertyRepository->findAll();
     }
 
-    public function updateProperty(int $id, PropertyCreationDTO $propertyCreationDTO)
+    public function updateProperty(int $id, CreatePropertyDTO $propertyCreationDTO)
     {
         $now = new \DateTime('now');
         $property = $this->getPropertyById($id);
@@ -89,7 +89,7 @@ class PropertyService
 //        return $this->propertyRepository->paginate($queryBuilder, $searchDTO->page, $searchDTO->limit);
 //    }
 
-    protected function convertDTOToEntity(PropertyCreationDTO $propertyCreationDTO):PropertyEntity
+    protected function convertDTOToEntity(CreatePropertyDTO $propertyCreationDTO):PropertyEntity
     {
         $property = new PropertyEntity();
         $now = new \DateTime('now');
@@ -104,5 +104,19 @@ class PropertyService
         $property->setUpdatedAt($now->format('Y-m-d H:i:s'));
 
         return $property;
+    }
+
+    protected function convertEntityToDTO(PropertyEntity $propertyEntity): PropertyResponseDTO
+    {
+        return new PropertyResponseDTO(
+            $id = $propertyEntity->getId(),
+            $title = $propertyEntity->getTitle(),
+            $description = $propertyEntity->getDescription(),
+            $price = $propertyEntity->getPrice(),
+            $location = $propertyEntity->getLocation(),
+            $size = $propertyEntity->getSize(),
+            $images = $propertyEntity->getImages(),
+            $agentId = $propertyEntity->getAgentId(),
+        );
     }
 }

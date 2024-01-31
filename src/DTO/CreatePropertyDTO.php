@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-class PropertyCreationDTO
+class CreatePropertyDTO
 {
     public function __construct(
         #[Assert\NotBlank]
