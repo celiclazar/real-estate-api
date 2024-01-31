@@ -2,48 +2,37 @@
 
 namespace App\Service;
 
+use App\DTO\CreatePropertyResponseDTO;
 use App\DTO\PropertyCreationDTO;
-use App\Entity\Property;
-use App\DTO\PropertyDTO;
+use App\Entity\Property as PropertyEntity;
 use App\Repository\PropertyRepository;
-use Doctrine\ORM\EntityManagerInterface;
 
 class PropertyService
 {
-    private EntityManagerInterface $entityManager;
     private PropertyRepository $propertyRepository;
 
-    public function __construct(EntityManagerInterface $entityManager, PropertyRepository $propertyRepository )
+    public function __construct( PropertyRepository $propertyRepository )
     {
-        $this->entityManager = $entityManager;
         $this->propertyRepository = $propertyRepository;
     }
 
-    public function createProperty(PropertyCreationDTO $propertyCreationDTO):Property
+    public function createProperty(PropertyCreationDTO $propertyCreationDTO):CreatePropertyResponseDTO
     {
-        $now = new \DateTime('now');
-        $property = new Property();
-        $property->setTitle($propertyCreationDTO->title);
-        $property->setDescription($propertyCreationDTO->description);
-        $property->setPrice($propertyCreationDTO->price); //null
-        $property->setLocation($propertyCreationDTO->location);
-        $property->setSize($propertyCreationDTO->size);
-        $property->setImages($propertyCreationDTO->images);
-        $property->setAgentId($propertyCreationDTO->agentId);
-        //need to convert to string because of asserts in Entity class
-        $property->setCreatedAt($now->format('Y-m-d H:i:s'));
-        $property->setUpdatedAt($now->format('Y-m-d H:i:s'));
+        try {
+            $propertyEntity = $this->convertDTOToEntity($propertyCreationDTO);
+            $this->propertyRepository->saveProperty($propertyEntity);
 
-        $this->entityManager->persist($property);
-        $this->entityManager->flush();
+            return new CreatePropertyResponseDTO(true, 'Property created successfully', $propertyEntity);
 
-        return $property;
+        } catch (\Exception $e) {
+            return new CreatePropertyResponseDTO(false, 'Failed to create property', null, $e->getMessage());
+        }
     }
 
-    public function getPropertyById($id) //ovde mozda da pretvorim u DTO
+    public function getPropertyById($id)
     {
 
-        if (!empty($property = $this->entityManager->getRepository(Property::class)->find($id)))
+        if (!empty($property = $this->entityManager->getRepository(PropertyEntity::class)->find($id)))
         {
             return $property;
         }
@@ -53,10 +42,10 @@ class PropertyService
 
     public function getProperties()
     {
-        return $this->entityManager->getRepository(Property::class)->findAll();
+        return $this->entityManager->getRepository(PropertyEntity::class)->findAll();
     }
 
-    public function updateProperty(int $id, PropertyDTO $propertyDTO)
+    public function updateProperty(int $id, PropertyCreationDTO $propertyCreationDTO)
     {
         $now = new \DateTime('now');
         $property = $this->getPropertyById($id);
@@ -64,13 +53,13 @@ class PropertyService
             return null;
         }
         // Update the property's fields with the new values
-        $property->setTitle($propertyDTO->title);
-        $property->setDescription($propertyDTO->description);
-        $property->setPrice($propertyDTO->price);
-        $property->setLocation($propertyDTO->location);
-        $property->setSize($propertyDTO->size);
-        $property->setImages($propertyDTO->images);
-        $property->setAgentId($propertyDTO->agentId);
+        $property->setTitle($propertyCreationDTO->title);
+        $property->setDescription($propertyCreationDTO->description);
+        $property->setPrice($propertyCreationDTO->price);
+        $property->setLocation($propertyCreationDTO->location);
+        $property->setSize($propertyCreationDTO->size);
+        $property->setImages($propertyCreationDTO->images);
+        $property->setAgentId($propertyCreationDTO->agentId);
         $property->setUpdatedAt($now->format('Y-m-d H:i:s'));
 
         $this->entityManager->flush();
@@ -93,10 +82,27 @@ class PropertyService
 
     }
 
-    public function searchProperties(PropertySearchDTO $searchDTO): Paginator
-    {
-        $queryBuilder = $this->propertyRepository->createSearchQueryBuilder($searchDTO);
+//    public function searchProperties(PropertySearchDTO $searchDTO): Paginator
+//    {
+//        $queryBuilder = $this->propertyRepository->createSearchQueryBuilder($searchDTO);
+//
+//        return $this->propertyRepository->paginate($queryBuilder, $searchDTO->page, $searchDTO->limit);
+//    }
 
-        return $this->propertyRepository->paginate($queryBuilder, $searchDTO->page, $searchDTO->limit);
+    protected function convertDTOToEntity(PropertyCreationDTO $propertyCreationDTO):PropertyEntity
+    {
+        $property = new PropertyEntity();
+        $now = new \DateTime('now');
+        $property->setTitle($propertyCreationDTO->title);
+        $property->setDescription($propertyCreationDTO->description);
+        $property->setPrice($propertyCreationDTO->price); //null
+        $property->setLocation($propertyCreationDTO->location);
+        $property->setSize($propertyCreationDTO->size);
+        $property->setImages($propertyCreationDTO->images);
+        $property->setAgentId($propertyCreationDTO->agentId);
+        $property->setCreatedAt($now->format('Y-m-d H:i:s'));
+        $property->setUpdatedAt($now->format('Y-m-d H:i:s'));
+
+        return $property;
     }
 }

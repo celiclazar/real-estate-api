@@ -9,8 +9,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\DTO\PropertyDTO;
-use App\Validator\PropertyValidator;
 
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 
@@ -19,10 +17,9 @@ class PropertyApiController extends AbstractController
     private $propertyService;
     private $propertyValidator;
 
-    public function __construct(PropertyService $propertyService, PropertyValidator $propertyValidator  )
+    public function __construct(PropertyService $propertyService)
     {
         $this->propertyService = $propertyService;
-        $this->propertyValidator = $propertyValidator;
     }
 
     #[Route('api/properties', name: 'app_properties', methods: ['GET'])]
@@ -72,14 +69,14 @@ class PropertyApiController extends AbstractController
     public function create(#[MapRequestPayload] PropertyCreationDTO $propertyCreationDTO): JsonResponse
     {
         try {
-            if ($property = $this->propertyService->createProperty($propertyCreationDTO)) {
+            if ($responseDTO = $this->propertyService->createProperty($propertyCreationDTO)) {
                 return $this->json(
-                    ['message' => 'Property created successfully', 'propertyId' => $property->getId()],
+                    ['message' => 'Property created successfully', 'property' => $responseDTO->getData()],
                     Response::HTTP_CREATED // 201 status code
                 );
             } else {
                 return $this->json(
-                    ['error' => 'Property creation failed'],
+                    ['error' => 'Property creation failed', 'errorMessage' => $responseDTO->getMessage()],
                     Response::HTTP_BAD_REQUEST // 400 status code
                 );
             }
@@ -92,39 +89,38 @@ class PropertyApiController extends AbstractController
     }
 
     #[Route('api/properties/{id?}', name: 'app_properties_update', methods: ['PUT'])]
-    public function update(int $id, Request $request): Response
+    public function update(int $id, #[MapRequestPayload] PropertyCreationDTO $propertyCreationDTO): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $propertyDTO = new PropertyDTO($data);
-        $errors = $this->propertyValidator->validate($propertyDTO);
+        $this->propertyService->updateProperty($id, $propertyCreationDTO);
 
-        if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
-            }
 
-            return $this->json([
-                'errors' => $errorMessages
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $updatedProperty = $this->propertyService->updateProperty($id, $propertyDTO);
-
-            if (empty($updatedProperty)) {
-                return $this->json(['error' => 'Property not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            return $this->json([
-                'success' => 'Property updated',
-                'id' => $updatedProperty->getId()
-            ], JsonResponse::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json([
-                'error' => $e->getMessage()
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+//        if (count($errors) > 0) {
+//            $errorMessages = [];
+//            foreach ($errors as $error) {
+//                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+//            }
+//
+//            return $this->json([
+//                'errors' => $errorMessages
+//            ], Response::HTTP_BAD_REQUEST);
+//        }
+//
+//        try {
+//            $updatedProperty = $this->propertyService->updateProperty($id, $propertyDTO);
+//
+//            if (empty($updatedProperty)) {
+//                return $this->json(['error' => 'Property not found'], Response::HTTP_NOT_FOUND);
+//            }
+//
+//            return $this->json([
+//                'success' => 'Property updated',
+//                'id' => $updatedProperty->getId()
+//            ], JsonResponse::HTTP_OK);
+//        } catch (\Exception $e) {
+//            return $this->json([
+//                'error' => $e->getMessage()
+//            ], JsonResponse::HTTP_BAD_REQUEST);
+//        }
     }
 
     #[Route('api/properties/{id}', name: 'app_properties_delete', methods: ['DELETE'])]

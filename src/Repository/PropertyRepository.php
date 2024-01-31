@@ -8,6 +8,8 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+
 
 
 /**
@@ -20,9 +22,19 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PropertyRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $entityManager;
+
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $entityManager)
     {
         parent::__construct($registry, Property::class);
+        $this->entityManager = $entityManager;
+    }
+
+    public function saveProperty(Property $propertyEntity):void
+    {
+        //dd($propertyEntity);
+        $this->entityManager->persist($propertyEntity);
+        $this->entityManager->flush();
     }
 
     public function createSearchQueryBuilder(PropertySearchDTO $propertySearchDTO): QueryBuilder
