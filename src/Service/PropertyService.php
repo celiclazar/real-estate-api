@@ -5,6 +5,7 @@ namespace App\Service;
 use App\DTO\CreatePropertyResponseDTO;
 use App\DTO\CreatePropertyDTO;
 use App\DTO\PropertyResponseDTO;
+use App\DTO\UpdatePropertyDTO;
 use App\Entity\Property as PropertyEntity;
 use App\Repository\PropertyRepository;
 
@@ -20,7 +21,10 @@ class PropertyService
     public function createProperty(CreatePropertyDTO $propertyCreationDTO):CreatePropertyResponseDTO
     {
         try {
+            $now = new \DateTime('now');
             $propertyEntity = $this->convertDTOToEntity($propertyCreationDTO);
+            $propertyEntity->setCreatedAt($now->format('Y-m-d H:i:s'));
+            $propertyEntity->setUpdatedAt($now->format('Y-m-d H:i:s'));
             $this->propertyRepository->saveProperty($propertyEntity);
 
             return new CreatePropertyResponseDTO(true, 'Property created successfully', $propertyEntity);
@@ -42,29 +46,17 @@ class PropertyService
 
     public function getProperties()
     {
-        return $this->propertyRepository->findAll();
+        return array_map([$this, 'convertEntityToDTO'], $this->propertyRepository->findAll());
     }
 
-    public function updateProperty(int $id, CreatePropertyDTO $propertyCreationDTO)
+    public function updateProperty(int $id, UpdatePropertyDTO $updatePropertyDTO)
     {
         $now = new \DateTime('now');
-        $property = $this->getPropertyById($id);
-        if (empty($property)) {
-            return null;
-        }
-        // Update the property's fields with the new values
-        $property->setTitle($propertyCreationDTO->title);
-        $property->setDescription($propertyCreationDTO->description);
-        $property->setPrice($propertyCreationDTO->price);
-        $property->setLocation($propertyCreationDTO->location);
-        $property->setSize($propertyCreationDTO->size);
-        $property->setImages($propertyCreationDTO->images);
-        $property->setAgentId($propertyCreationDTO->agentId);
-        $property->setUpdatedAt($now->format('Y-m-d H:i:s'));
+        $propertyEntity = $this->convertDTOToEntity($updatePropertyDTO);
+        $propertyEntity->setUpdatedAt($now->format('Y-m-d H:i:s'));
+        $this->propertyRepository->saveProperty($propertyEntity);
 
-        $this->entityManager->flush();
-
-        return $property;
+        return new CreatePropertyResponseDTO(true, 'Property updated successfully', $propertyEntity);
     }
 
     public function deleteProperty($id)
@@ -82,13 +74,6 @@ class PropertyService
 
     }
 
-//    public function searchProperties(PropertySearchDTO $searchDTO): Paginator
-//    {
-//        $queryBuilder = $this->propertyRepository->createSearchQueryBuilder($searchDTO);
-//
-//        return $this->propertyRepository->paginate($queryBuilder, $searchDTO->page, $searchDTO->limit);
-//    }
-
     protected function convertDTOToEntity(CreatePropertyDTO $propertyCreationDTO):PropertyEntity
     {
         $property = new PropertyEntity();
@@ -100,8 +85,6 @@ class PropertyService
         $property->setSize($propertyCreationDTO->size);
         $property->setImages($propertyCreationDTO->images);
         $property->setAgentId($propertyCreationDTO->agentId);
-        $property->setCreatedAt($now->format('Y-m-d H:i:s'));
-        $property->setUpdatedAt($now->format('Y-m-d H:i:s'));
 
         return $property;
     }

@@ -22,12 +22,16 @@ class PropertyApiController extends AbstractController
     }
 
     #[Route('api/properties', name: 'app_properties', methods: ['GET'])]
-    public function property(): JsonResponse
+    public function property():JsonResponse
     {
-        $properties = $this->propertyService->getProperties();
-        return $this->json([
-            'properties' => $properties
-        ]);
+        try {
+            return $this->json($this->propertyService->getProperties());
+        } catch (\Exception $e) {
+            return $this->json(
+                ['error' => 'An error occurred: ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     #[Route('api/properties/{id}', name: 'app_properties_show', methods: ['GET'])]
@@ -35,36 +39,17 @@ class PropertyApiController extends AbstractController
     {
         $property = $this->propertyService->getPropertyById($id);
 
-        if (empty($property)){
-            return $this->json(['error' => 'Property not found'], 404);
+        if ($property === null) {
+            return $this->json(
+                ['error' => 'Property not found'],
+                Response::HTTP_NOT_FOUND
+            );
         }
 
-        return $this->json($property, 200, []);
+        return $this->json($property);
     }
 
-    #[Route('/api/search', name: 'api_properties_search', methods: ['GET'])]
-    public function search(Request $request): JsonResponse
-    {
-        $searchDTO = new PropertySearchDTO(
-            $request->query->get('title'),
-            $request->query->getInt('page', 1),
-            $request->query->getInt('limit', 10)
-        );
-
-        $paginator = $this->propertyService->searchProperties($searchDTO);
-
-        // You can also convert paginator to array if needed
-        $properties = iterator_to_array($paginator);
-
-        return $this->json([
-            'data' => $properties,
-            'currentPage' => $searchDTO->page,
-            'totalItems' => count($paginator),
-            'totalPages' => ceil(count($paginator) / $searchDTO->limit)
-        ]);
-    }
-
-    #[Route('api/properties/add', name: 'app_properties', methods: ['POST'])]
+    #[Route('api/properties/add', name: 'app_properties_add', methods: ['POST'])]
     public function create(#[MapRequestPayload] CreatePropertyDTO $propertyCreationDTO): JsonResponse
     {
         try {
@@ -90,7 +75,8 @@ class PropertyApiController extends AbstractController
     #[Route('api/properties/{id?}', name: 'app_properties_update', methods: ['PUT'])]
     public function update(int $id, #[MapRequestPayload] CreatePropertyDTO $propertyCreationDTO): JsonResponse
     {
-        $this->propertyService->updateProperty($id, $propertyCreationDTO);
+
+        dd($this->propertyService->updateProperty($id, $propertyCreationDTO));
 
 
 //        if (count($errors) > 0) {
@@ -140,3 +126,24 @@ class PropertyApiController extends AbstractController
 
 }
 
+//    #[Route('/api/search', name: 'api_properties_search', methods: ['GET'])]
+//    public function search(Request $request): JsonResponse
+//    {
+//        $searchDTO = new PropertySearchDTO(
+//            $request->query->get('title'),
+//            $request->query->getInt('page', 1),
+//            $request->query->getInt('limit', 10)
+//        );
+//
+//        $paginator = $this->propertyService->searchProperties($searchDTO);
+//
+//        // You can also convert paginator to array if needed
+//        $properties = iterator_to_array($paginator);
+//
+//        return $this->json([
+//            'data' => $properties,
+//            'currentPage' => $searchDTO->page,
+//            'totalItems' => count($paginator),
+//            'totalPages' => ceil(count($paginator) / $searchDTO->limit)
+//        ]);
+//    }
