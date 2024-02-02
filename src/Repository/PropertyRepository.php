@@ -37,6 +37,13 @@ class PropertyRepository extends ServiceEntityRepository
             $this->entityManager->flush();
     }
 
+    public function deleteProperty(Property $propertyEntity)
+    {
+        $this->entityManager->remove($propertyEntity);
+        $this->entityManager->flush();
+
+    }
+
     public function createSearchQueryBuilder(PropertySearchDTO $propertySearchDTO): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('p');

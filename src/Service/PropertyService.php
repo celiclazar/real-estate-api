@@ -6,6 +6,7 @@ use App\DTO\CreatePropertyResponseDTO;
 use App\DTO\CreatePropertyDTO;
 use App\DTO\PropertyResponseDTO;
 use App\DTO\UpdatePropertyDTO;
+use App\DTO\UpdatePropertyResponseDTO;
 use App\Entity\Property as PropertyEntity;
 use App\Repository\PropertyRepository;
 
@@ -22,7 +23,7 @@ class PropertyService
     {
         try {
             $now = new \DateTime('now');
-            $propertyEntity = $this->convertDTOToEntity($propertyCreationDTO);
+            $propertyEntity = $this->convertCreationDTOToEntity($propertyCreationDTO);
             $propertyEntity->setCreatedAt($now->format('Y-m-d H:i:s'));
             $propertyEntity->setUpdatedAt($now->format('Y-m-d H:i:s'));
             $this->propertyRepository->saveProperty($propertyEntity);
@@ -38,7 +39,7 @@ class PropertyService
     {
         if (!empty($property = $this->propertyRepository->find($id)))
         {
-            return $this->convertEntityToDTO($property);
+            return $this->convertEntityToCreationDTO($property);
         }
 
         return null;
@@ -51,36 +52,31 @@ class PropertyService
 
     public function updateProperty(int $id, UpdatePropertyDTO $updatePropertyDTO)
     {
-        $now = new \DateTime('now');
-        $propertyEntity = $this->convertDTOToEntity($updatePropertyDTO);
-        $propertyEntity->setUpdatedAt($now->format('Y-m-d H:i:s'));
-        $this->propertyRepository->saveProperty($propertyEntity);
+        try {
+            $now = new \DateTime('now');
+            $propertyEntity = $this->convertUpdateDTOToEntity($id, $updatePropertyDTO);
+            $propertyEntity->setUpdatedAt($now->format('Y-m-d H:i:s'));
+            $this->propertyRepository->saveProperty($propertyEntity);
 
-        return new CreatePropertyResponseDTO(true, 'Property updated successfully', $propertyEntity);
+            return new UpdatePropertyResponseDTO(true, 'Property updated successfully', $propertyEntity);
+        } catch (\Exception $e) {
+            return new UpdatePropertyResponseDTO(false, 'Updating failed', null, $e->getMessage());
+        }
     }
 
     public function deleteProperty($id)
     {
+        $property = $this->getPropertyById($id);
 
-        if (!empty($property = $this->getPropertyById($id))) {
-
-            $this->entityManager->remove($property);
-            $this->entityManager->flush();
-
-            return true;
-        }
-
-        return false;
-
+        return $this->propertyRepository->deleteProperty($property);
     }
 
-    protected function convertDTOToEntity(CreatePropertyDTO $propertyCreationDTO):PropertyEntity
+    protected function convertCreationDTOToEntity(CreatePropertyDTO $propertyCreationDTO):PropertyEntity
     {
         $property = new PropertyEntity();
-        $now = new \DateTime('now');
         $property->setTitle($propertyCreationDTO->title);
         $property->setDescription($propertyCreationDTO->description);
-        $property->setPrice($propertyCreationDTO->price); //null
+        $property->setPrice($propertyCreationDTO->price);
         $property->setLocation($propertyCreationDTO->location);
         $property->setSize($propertyCreationDTO->size);
         $property->setImages($propertyCreationDTO->images);
@@ -89,7 +85,7 @@ class PropertyService
         return $property;
     }
 
-    protected function convertEntityToDTO(PropertyEntity $propertyEntity): PropertyResponseDTO
+    protected function convertEntityToCreationDTO(PropertyEntity $propertyEntity): PropertyResponseDTO
     {
         return new PropertyResponseDTO(
             $id = $propertyEntity->getId(),
@@ -101,5 +97,18 @@ class PropertyService
             $images = $propertyEntity->getImages(),
             $agentId = $propertyEntity->getAgentId(),
         );
+    }
+
+    protected function convertUpdateDTOToEntity(int $id, UpdatePropertyDTO $propertyUpdateDTO):PropertyEntity
+    {
+        $property = $this->propertyRepository->find($id);
+        $property->setTitle($propertyUpdateDTO->title);
+        $property->setDescription($propertyUpdateDTO->description);
+        $property->setPrice($propertyUpdateDTO->price);
+        $property->setSize($propertyUpdateDTO->size);
+        $property->setImages($propertyUpdateDTO->images);
+        $property->setAgentId($propertyUpdateDTO->agentId);
+
+        return $property;
     }
 }

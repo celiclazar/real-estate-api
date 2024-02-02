@@ -17,25 +17,19 @@ class UpdatePropertyDTO
             type: 'integer',
             message: 'The value {{ value }} is not a valid {{ type }}.',
         )]
-        public readonly int    $price,
-
-        #[Assert\NotBlank]
-        #[Assert\Type('string')]
-        public readonly string $location,
+        public readonly int $price,
 
         #[Assert\Type(
             type: 'integer',
             message: 'The value {{ value }} is not a valid {{ type }}.',
         )]
-        public                 $size,
+        public $size,
 
         #[Assert\Type('array||null')]
-        public                 $images,
+        public $images,
 
-        public                 $agentId
+        public $agentId
     )
     {
-
     }
-}
 }
