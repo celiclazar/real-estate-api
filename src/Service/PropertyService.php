@@ -75,6 +75,14 @@ class PropertyService
         return $this->propertyRepository->deleteProperty($property);
     }
 
+    public function searchProperties(?string $title, ?string $price, ?string $location, ?string $size, ?string $agentId, int $page, int $limit): array
+    {
+        $offset = ($page - 1) * $limit;
+        $properties = $this->propertyRepository->searchPaginatedProperties($title, $price, $location, $size, $agentId, $limit, $offset);
+
+        return array_map([$this, 'convertEntityToCreationDTO'], $properties);
+    }
+
     protected function convertCreationDTOToEntity(CreatePropertyDTO $propertyCreationDTO):PropertyEntity
     {
         $property = new PropertyEntity();

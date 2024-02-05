@@ -38,14 +38,14 @@ class PropertyApiController extends AbstractController
         }
     }
 
-    #[Route('api/properties/{id}', name: 'app_properties_show', methods: ['GET'])]
+    #[Route('api/properties/{id}', name: 'app_properties_show', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show($id = null): JsonResponse
     {
         $property = $this->propertyService->getPropertyById($id);
 
         if ($property === null) {
             return $this->json(
-                ['error' => 'Property not found'],
+                ['error' => 'Property not found', 'evo me ovde',],
                 Response::HTTP_NOT_FOUND
             );
         }
@@ -112,6 +112,31 @@ class PropertyApiController extends AbstractController
             }
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+        }
+    }
+
+    #[Route('api/properties/search', name:'app_properties_search', methods: ['GET'])]
+    public function search(Request $request): JsonResponse
+    {
+        try {
+            $title = $request->query->get('title');
+            $price = $request->query->get('price');
+            $location = $request->query->get('location');
+            $size = $request->query->get('size');
+            $agentId = $request->query->get('agentId');
+
+            $page = $request->query->getInt('page', 1);
+            $limit = $request->query->getInt('limit', 10);
+
+            $properties = $this->propertyService->searchProperties($title, $price, $location, $size, $agentId, $page, $limit);
+            return $this->json([
+                'data' => $properties,
+                'currentPage' => $page,
+                'totalItems' => count($properties),
+                'totalPages' => ceil(count($properties) / $limit)
+            ]);
+        } catch (\Exception $e) {
+            return $this->json( $e->getMessage());
         }
     }
 

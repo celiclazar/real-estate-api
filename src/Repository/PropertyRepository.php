@@ -64,4 +64,26 @@ class PropertyRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function searchPaginatedProperties(?string $title, ?string $price, ?string $location, ?string $size, ?string $agentId, int $limit, int $offset): array
+    {
+        $queryBuilder = $this->createQueryBuilder('p');
+        $searchParameters = [
+            'title' => $title,
+            'price' => $price,
+            'location' => $location,
+            'size' => $size,
+            'agentId' => $agentId,
+        ];
+
+        foreach ($searchParameters as $field => $value) {
+            if ($value) {
+                $queryBuilder->andWhere("p.$field LIKE :$field")
+                    ->setParameter($field, '%' . $value . '%');
+            }
+        }
+        $queryBuilder->setMaxResults($limit)->setFirstResult($offset);
+
+        return $queryBuilder->getQuery()->getResult();
+    }
 }
