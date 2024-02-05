@@ -45,9 +45,13 @@ class PropertyService
         return null;
     }
 
-    public function getProperties()
+    public function getProperties(int $page = 1, int $limit = 10)
     {
-        return array_map([$this, 'convertEntityToDTO'], $this->propertyRepository->findAll());
+        $offset = ($page - 1) * $limit;
+
+        return array_map(
+            [$this, 'convertEntityToCreationDTO'],
+            $this->propertyRepository->findPaginatedProperties($limit, $offset));
     }
 
     public function updateProperty(int $id, UpdatePropertyDTO $updatePropertyDTO)

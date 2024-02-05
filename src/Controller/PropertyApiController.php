@@ -23,10 +23,13 @@ class PropertyApiController extends AbstractController
     }
 
     #[Route('api/properties', name: 'app_properties', methods: ['GET'])]
-    public function property():JsonResponse
+    public function property(Request $request):JsonResponse
     {
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 10);
+
         try {
-            return $this->json($this->propertyService->getProperties());
+            return $this->json($this->propertyService->getProperties($page, $limit));
         } catch (\Exception $e) {
             return $this->json(
                 ['error' => 'An error occurred: ' . $e->getMessage()],

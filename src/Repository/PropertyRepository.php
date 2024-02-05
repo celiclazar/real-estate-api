@@ -56,12 +56,12 @@ class PropertyRepository extends ServiceEntityRepository
         return $queryBuilder;
     }
 
-    public function paginate(QueryBuilder $queryBuilder, int $page, int $limit): Paginator
+    public function findPaginatedProperties(int $limit, int $offset): array
     {
-        $queryBuilder->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit);
-
-        return new Paginator($queryBuilder->getQuery());
+        return $this->createQueryBuilder('p')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
     }
-
 }
