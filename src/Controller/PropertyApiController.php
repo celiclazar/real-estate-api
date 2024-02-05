@@ -141,25 +141,3 @@ class PropertyApiController extends AbstractController
     }
 
 }
-
-//    #[Route('/api/search', name: 'api_properties_search', methods: ['GET'])]
-//    public function search(Request $request): JsonResponse
-//    {
-//        $searchDTO = new PropertySearchDTO(
-//            $request->query->get('title'),
-//            $request->query->getInt('page', 1),
-//            $request->query->getInt('limit', 10)
-//        );
-//
-//        $paginator = $this->propertyService->searchProperties($searchDTO);
-//
-//        // You can also convert paginator to array if needed
-//        $properties = iterator_to_array($paginator);
-//
-//        return $this->json([
-//            'data' => $properties,
-//            'currentPage' => $searchDTO->page,
-//            'totalItems' => count($paginator),
-//            'totalPages' => ceil(count($paginator) / $searchDTO->limit)
-//        ]);
-//    }
