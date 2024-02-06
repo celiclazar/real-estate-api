@@ -103,13 +103,9 @@ class PropertyApiController extends AbstractController
     public function delete($id): Response
     {
         try {
-            $property = $this->propertyService->deleteProperty($id);
+            $this->propertyService->deleteProperty($id);
+            return $this->json(['success' => 'Property deleted'], JsonResponse::HTTP_OK);
 
-            if ($property) {
-                return $this->json(['success' => 'Property deleted'], JsonResponse::HTTP_OK);
-            } else {
-                return $this->json(['error' => 'Property not found'], JsonResponse::HTTP_NOT_FOUND);
-            }
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }

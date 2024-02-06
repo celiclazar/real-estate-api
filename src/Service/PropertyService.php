@@ -70,9 +70,13 @@ class PropertyService
 
     public function deleteProperty($id)
     {
-        $property = $this->getPropertyById($id);
+        if ($property = $this->propertyRepository->find($id)) {
+            $this->propertyRepository->deleteProperty($property);
 
-        return $this->propertyRepository->deleteProperty($property);
+            return true;
+        }
+
+        throw new \Exception('Property not found');
     }
 
     public function searchProperties(?string $title, ?string $price, ?string $location, ?string $size, ?string $agentId, int $page, int $limit): array
