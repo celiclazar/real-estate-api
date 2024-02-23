@@ -11,18 +11,20 @@ use App\Entity\User as UserEntity;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-
 class AuthenticationUserService
 {
     private UserRepository $userRepository;
+    private JWTGenerator $jwtGenerator;
 
     public function __construct(
         UserRepository $userRepository,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        JWTGenerator $jwtGenerator
     ){
 
         $this->userRepository = $userRepository;
         $this->passwordHasher = $passwordHasher;
+        $this->jwtGenerator = $jwtGenerator;
     }
 
     public function login(LoginUserRequestDTO $loginRequestDto): string
@@ -37,7 +39,7 @@ class AuthenticationUserService
             throw new BadCredentialsException('Invalid email or password.');
         }
 
-        return $this->jwtManager->create($user);
+        return $this->jwtGenerator->generateToken($user);
     }
 
     public function registerUser(RegisterUserRequestDTO $registerUserRequestDTO): RegisterUserResponseDTO
