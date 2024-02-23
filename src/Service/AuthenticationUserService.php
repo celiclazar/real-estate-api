@@ -2,12 +2,14 @@
 
 namespace App\Service;
 
+use App\DTO\CreateUserResponseDTO;
 use App\DTO\LoginUserRequestDTO;
 use App\DTO\RegisterUserRequestDTO;
 use App\DTO\RegisterUserResponseDTO;
 use App\Repository\UserRepository;
 use App\Entity\User as UserEntity;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 
 class AuthenticationUserService
@@ -16,9 +18,11 @@ class AuthenticationUserService
 
     public function __construct(
         UserRepository $userRepository,
+        UserPasswordHasherInterface $passwordHasher
     ){
 
         $this->userRepository = $userRepository;
+        $this->passwordHasher = $passwordHasher;
     }
 
     public function login(LoginUserRequestDTO $loginRequestDto): string
@@ -41,8 +45,9 @@ class AuthenticationUserService
         try {
             $userEntity = $this->convertRegisterUserRequestDTOToEntity($registerUserRequestDTO);
             $this->userRepository->registerUser($userEntity);
+            $userResponseDTO = $this->convertEntityToCreateUserResponseDTO($userEntity);
 
-            return new RegisterUserResponseDTO(true, 'User created successfully', $userEntity);
+            return new RegisterUserResponseDTO(true, 'User created successfully', $userResponseDTO);
 
         } catch (\Exception $e) {
             return new RegisterUserResponseDTO(false, 'Failed to create user.', null, $e->getMessage());
@@ -53,9 +58,20 @@ class AuthenticationUserService
     {
         $user = new UserEntity();
         $user->setEmail($registerUserRequestDTO->email);
-        $user->setPassword($registerUserRequestDTO->password); //need to hash this
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $registerUserRequestDTO->password);
+        $user->setPassword($hashedPassword);
+        $user->setRoles(['ROLE_USER']);
 
         return $user;
+    }
 
+    public function convertEntityToCreateUserResponseDTO(UserEntity $user): CreateUserResponseDTO
+    {
+        $userResponseDTO = new CreateUserResponseDTO(
+            $user->getId(),
+            $user->getEmail()
+        );
+
+        return $userResponseDTO;
     }
 }

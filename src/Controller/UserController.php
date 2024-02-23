@@ -7,6 +7,7 @@ use App\DTO\RegisterUserRequestDTO;
 use App\Service\AuthenticationUserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -34,10 +35,22 @@ class UserController extends AbstractController
     #[Route('/api/register', name: 'register', methods: ['POST'])]
     public function register(#[MapRequestPayload] RegisterUserRequestDTO $registerRequestDTO): JsonResponse {
         try {
-            $user = $this->authenticationUserService->registerUser($registerRequestDTO);
-            return false;
+            if ($responseDTO = $this->authenticationUserService->registerUser($registerRequestDTO)) {
+                return $this->json(
+                    ['message' => $responseDTO->getMessage(), 'user' => $responseDTO->getData()],
+                    Response::HTTP_CREATED
+                );
+            } else {
+                return $this->json(
+                    ['error' => $responseDTO->getMessage(), 'errorMessage' => $responseDTO->getError()],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(
+              ['error' => 'An error occured: ' . $e->getMessage()],
+              Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 }
